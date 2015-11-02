@@ -1750,7 +1750,6 @@ failure_unsent:
 	}
 	Config->Status->Failed++;
 	Config->Service->AddSentSMSInfo(&sms, Config, Config->SMSID, i + 1, SMSD_SEND_SENDING_ERROR, Config->TPMR);
-	Config->Service->MoveSMS(&sms,Config, Config->SMSID, TRUE, FALSE);
 	return ERR_UNKNOWN;
 failure_sent:
 	if (Config->Service->MoveSMS(&sms,Config, Config->SMSID, FALSE, TRUE) != ERR_NONE) {
