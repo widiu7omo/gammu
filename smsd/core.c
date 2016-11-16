@@ -1168,7 +1168,9 @@ gboolean SMSD_RunOn(const char *command, GSM_MultiSMSMessage *sms, GSM_SMSDConfi
 
 		/* Close write end of pipe */
 		close(pipefd[1]);
-		fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+		if (fcntl(pipefd[0], F_SETFL, O_NONBLOCK) != 0) {
+			SMSD_Log(DEBUG_ERROR, Config, "Failed to set nonblocking pipe to child!");
+		}
 
 		i = 0;
 		do {
@@ -1857,7 +1859,8 @@ GSM_Error SMSD_InitSharedMemory(GSM_SMSDConfig *Config, gboolean writable)
 	/* Initial shared memory content */
 	if (writable) {
 		Config->Status->Version = SMSD_SHM_VERSION;
-		strcpy(Config->Status->PhoneID, Config->PhoneID);
+		strncpy(Config->Status->PhoneID, Config->PhoneID, sizeof(Config->Status->PhoneID));
+		Config->Status->PhoneID[sizeof(Config->Status->PhoneID) - 1] = 0;
 		sprintf(Config->Status->Client, "Gammu %s on %s compiler %s",
 			GAMMU_VERSION,
 			GetOS(),
