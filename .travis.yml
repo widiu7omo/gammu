@@ -12,6 +12,8 @@ env:
 before_script:
   - mkdir _build
   - cd _build
+script:
+  - echo
 after_failure:
   - if [ -f cov-int/build-log.txt ] ; then cat cov-int/build-log.txt ; fi
 # trigger Buildtime Trend Service to parse Travis CI log
