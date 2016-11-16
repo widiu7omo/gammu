@@ -1,10 +1,8 @@
 os:
   - linux
-  - osx
 language: cpp
 compiler:
   - gcc
-  - clang
 env:
   matrix:
     - ARGS=""
@@ -12,23 +10,10 @@ env:
     - CTEST_OUTPUT_ON_FAILURE=1
     - TESTARGS="-DMYSQL_TESTING=on -DPSQL_TESTING=ON -DMYSQL_USER=root -DPSQL_USER=postgres -DPSQL_PASSWORD= -DODBC_TESTING=ON -DODBC_DSN=ODBCTest" 
 before_script:
-  - if [ -f /usr/share/libmyodbc/odbcinst.ini ] ; then cp /usr/share/libmyodbc/odbcinst.ini ~/.odbcinst.ini ; fi
-  - cp tests/odbc.ini ~/.odbc.ini
-  - if [ $TRAVIS_OS_NAME = linux ] ; then if [ $CC = clang ] ; then export CXX=clang++-3.8 ; export CC=clang-3.8 ; else export CXX=g++-6 ; export CC=gcc-6 ; fi ; fi
-  - if [ $TRAVIS_OS_NAME = linux ] ; then psql -c 'create database smsd;' -U postgres ; fi
-  - if [ $TRAVIS_OS_NAME = linux ] ; then mysql -uroot -e "create database smsd;" ; fi
-  - if [ $TRAVIS_OS_NAME = linux ] ; then mysql -uroot -e "SET PASSWORD = PASSWORD('smsd')" ; fi
-  - if [ $TRAVIS_OS_NAME != linux ] ; then export TESTARGS= ; fi
   - mkdir _build
   - cd _build
-  - ln -s ../codecov.yml .
-script:
-  - cmake .. -DCMAKE_C_COMPILER=$CC -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Continuous -DONLINE_TESTING=ON $TESTARGS $ARGS
-  - make
-  - make test
-after_success:
-  - make gcov
-  - bash <(curl -s https://codecov.io/bash) -X gcov -F $TRAVIS_OS_NAME
+after_failure:
+  - if [ -f cov-int/build-log.txt ] ; then cat cov-int/build-log.txt ; fi
 # trigger Buildtime Trend Service to parse Travis CI log
 notifications:
   webhooks:
@@ -58,14 +43,11 @@ addons:
     - gcc-6
     - g++-6
     - libmyodbc
-matrix:
-  exclude:
-    - os: osx
-      compiler: gcc
-  include:
-    - os: linux
-      compiler: gcc
-      env: ARGS="-DENABLE_GETOPT=OFF"
-services:
-  - mysql
-  - postgresql
+  coverity_scan:
+    project:
+      name: "gammu/gammu"
+      description: "Build submitted via Travis CI"
+    notification_email: michal@cihar.com
+    build_command_prepend: cmake ..
+    build_command: make
+    branch_pattern: coverity_scan
