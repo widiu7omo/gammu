@@ -195,19 +195,23 @@ size_t UnicodeLength(const unsigned char *str)
 }
 
 /* Convert Unicode char saved in src to dest */
-int EncodeWithUnicodeAlphabet(const unsigned char *src, wchar_t *dest)
+int EncodeWithUnicodeAlphabet(const unsigned char *src, gammu_char_t *dest)
 {
 	int retval;
+	wchar_t out = 0;
 
-        switch (retval = mbtowc(dest, src, MB_CUR_MAX)) {
-                case -1 :
+	retval = mbtowc(&out, src, MB_CUR_MAX);
+	*dest = out;
+
+	switch (retval) {
+		case -1 :
 		case  0 : return 1;
-                default : return retval;
-        }
+		default : return retval;
+	}
 }
 
 /* Convert Unicode char saved in src to dest */
-int DecodeWithUnicodeAlphabet(wchar_t src, unsigned char *dest)
+int DecodeWithUnicodeAlphabet(gammu_char_t src, unsigned char *dest)
 {
         int retval;
 
@@ -223,7 +227,7 @@ int DecodeWithUnicodeAlphabet(wchar_t src, unsigned char *dest)
 void DecodeUnicode (const unsigned char *src, char *dest)
 {
 	int		i=0,o=0;
-	wchar_t		value, second;
+	gammu_char_t		value, second;
 
 	while (src[(2*i)+1]!=0x00 || src[2*i]!=0x00) {
 		value = src[i * 2] * 256 + src[i * 2 + 1];
@@ -297,16 +301,45 @@ void DecodeISO88591 (unsigned char *dest, const char *src, size_t len)
 	dest[(2 * i) + 1] = 0;
 }
 
+/**
+ * Stores UTF16 char in output
+ *
+ * Returns 1 if additional output was used
+ */
+size_t StoreUTF16 (unsigned char *dest, gammu_char_t wc)
+{
+	gammu_char_t tmp;
+
+	if (wc > 0xffff) {
+		wc = wc - 0x10000;
+		tmp = 0xD800 | (wc >> 10);
+		dest[0]	= (tmp >> 8) & 0xff;
+		dest[1]	= tmp & 0xff;
+
+		tmp = 0xDC00 | (wc & 0x3ff);
+
+		dest[2]	= (tmp >> 8) & 0xff;
+		dest[3]	= tmp & 0xff;
+
+		return 1;
+	}
+
+	dest[0]	= (wc >> 8) & 0xff;
+	dest[1]	= wc & 0xff;
+	return 0;
+}
+
 /* Encode string to Unicode. Len is number of input chars */
 void EncodeUnicode (unsigned char *dest, const char *src, size_t len)
 {
 	size_t 		i_len = 0, o_len;
- 	wchar_t 	wc;
+ 	gammu_char_t 	wc;
 
 	for (o_len = 0; i_len < len; o_len++) {
 		i_len += EncodeWithUnicodeAlphabet(&src[i_len], &wc);
-		dest[o_len*2]		= (wc >> 8) & 0xff;
-		dest[(o_len*2)+1]	= wc & 0xff;
+		if (StoreUTF16(dest + o_len * 2, wc)) {
+			o_len++;
+		}
  	}
 	dest[o_len*2]		= 0;
 	dest[(o_len*2)+1]	= 0;
@@ -1125,7 +1158,7 @@ out:
 int GSM_PackSemiOctetNumber(const unsigned char *Number, unsigned char *Output, gboolean semioctet)
 {
 	unsigned char	format;
-	int		length, i, skip = 0;
+	size_t		length, i, skip = 0;
 	unsigned char    *buffer;
 
 	length = UnicodeLength(Number);
@@ -1349,7 +1382,7 @@ void GetBufferI(unsigned char 	*Source,
 {
 	size_t l=0,z,i=0;
 
-	z = 1<<(BitsToProcess-1);
+	z = 1 << (BitsToProcess - 1);
 
 	while (i!=BitsToProcess) {
 		if (GetBit(Source, (*CurrentBit)+i)) l=l+z;
@@ -1437,7 +1470,7 @@ void DecodeUnicodeSpecialNOKIAChars(unsigned char *dest, const unsigned char *sr
 gboolean mywstrncasecmp(unsigned const  char *a, unsigned const  char *b, int num)
 {
  	int 		i;
-  	wchar_t 	wc,wc2;
+  	gammu_char_t 	wc,wc2;
 
         if (a == NULL || b == NULL) return FALSE;
 
@@ -1473,7 +1506,7 @@ gboolean myiswspace(unsigned const char *src)
  	int 		o;
 	unsigned char	dest[10];
 #endif
- 	wchar_t 	wc;
+ 	gammu_char_t 	wc;
 
 	wc = src[1] | (src[0] << 8);
 
@@ -1507,9 +1540,9 @@ gboolean myiswspace(unsigned const char *src)
 
 unsigned char *mywstrstr (const unsigned char *haystack, const unsigned char *needle)
 {
-/* One crazy define to convert unicode used in Gammu to standard wchar_t */
-#define tolowerwchar(x) (towlower((wchar_t)( (((&(x))[0] & 0xff) << 8) | (((&(x))[1] & 0xff)) )))
-	register wint_t a, b, c;
+/* One crazy define to convert unicode used in Gammu to standard gammu_char_t */
+#define tolowerwchar(x) (towlower((gammu_char_t)( (((&(x))[0] & 0xff) << 8) | (((&(x))[1] & 0xff)) )))
+	register gammu_int_t a, b, c;
 	register const unsigned char *rhaystack, *rneedle;
 
 
@@ -1863,24 +1896,65 @@ gboolean EncodeUTF8(char *dest, const unsigned char *src)
 }
 
 /* Decode UTF8 char to Unicode char */
-int DecodeWithUTF8Alphabet(const unsigned char *src, wchar_t *dest, size_t len)
+int DecodeWithUTF8Alphabet(const unsigned char *src, gammu_char_t *dest, size_t len)
 {
-	if (len < 1) return 0;
-	if (src[0] < 128) {
-		(*dest) = src[0];
+	gammu_char_t src0, src1, src2, src3;
+	if (len < 1) {
+		return 0;
+	}
+	src0 = src[0];
+
+	// 1-byte sequence (no continuation bytes)
+	if ((src0 & 0x80) == 0) {
+		(*dest) = src0;
 		return 1;
 	}
-	if (src[0] < 194) return 0;
-	if (src[0] < 224) {
-		if (len < 2) return 0;
-		(*dest) = (src[0]-192)*64 + (src[1]-128);
-		return 2;
+
+	if (len < 2) {
+		return 0;
 	}
-	if (src[0] < 240) {
-		if (len < 3) return 0;
-		(*dest) = (src[0]-224)*4096 + (src[1]-128)*64 + (src[2]-128);
-		return 3;
+	src1 = src[1];
+
+	// 2-byte sequence
+	if ((src0 & 0xE0) == 0xC0) {
+		(*dest) = ((src0 & 0x1F) << 6) | (src1 & 0x3f);
+		if (*dest >= 0x80) {
+			return 2;
+		} else {
+			return 0;
+		}
 	}
+
+	if (len < 3) {
+		return 0;
+	}
+	src2 = src[2];
+
+	// 3-byte sequence (may include unpaired surrogates)
+	if ((src0 & 0xF0) == 0xE0) {
+		(*dest) = ((src0 & 0x0F) << 12) | ((src1 & 0x3f) << 6) | (src2 & 0x3f);
+		if ((*dest) >= 0x0800) {
+			if ((*dest) >= 0xD800 && (*dest) <= 0xDFFF) {
+				return 0;
+			}
+			return 3;
+		}
+	}
+
+	if (len < 4) {
+		return 0;
+	}
+	src3 = src[3];
+
+	// 4-byte sequence
+	if ((src0 & 0xF8) == 0xF0) {
+		(*dest) = ((src0 & 0x07) << 0x12) | ((src1 & 0x3f) << 0x0C) |
+			((src2 & 0x3f) << 0x06) | (src3 & 0x3f);
+		if ((*dest) >= 0x010000 && (*dest) <= 0x10FFFF) {
+			return 4;
+		}
+	}
+
 	return 0;
 }
 
@@ -1913,7 +1987,7 @@ void DecodeUTF8QuotedPrintable(unsigned char *dest, const char *src, size_t len)
 	size_t 		i,j=0;
 	int		z;
 	unsigned char	mychar[10];
-	wchar_t		ret;
+	gammu_char_t		ret;
 
 	for (i = 0; i<=len; ) {
 		z=0;
@@ -1933,12 +2007,15 @@ void DecodeUTF8QuotedPrintable(unsigned char *dest, const char *src, size_t len)
 		if (z>0) {
 			i += z * 3;
 			/*  we ignore wrong sequence */
-			if (DecodeWithUTF8Alphabet(mychar,&ret,z)==0) continue;
+			if (DecodeWithUTF8Alphabet(mychar, &ret, z)==0) continue;
 		} else {
-			i+=EncodeWithUnicodeAlphabet(&src[i], &ret);
+			i += EncodeWithUnicodeAlphabet(&src[i], &ret);
 		}
-		dest[j++] = (ret >> 8) & 0xff;
-		dest[j++] = ret & 0xff;
+		if (StoreUTF16(dest + j, ret)) {
+			j += 4;
+		} else {
+			j += 2;
+		}
 	}
 	dest[j++] = 0;
 	dest[j] = 0;
@@ -1947,17 +2024,19 @@ void DecodeUTF8QuotedPrintable(unsigned char *dest, const char *src, size_t len)
 void DecodeUTF8(unsigned char *dest, const char *src, size_t len)
 {
 	size_t 		i=0,j=0,z;
-	wchar_t		ret;
+	gammu_char_t		ret;
 
 	while (i < len) {
-		z = DecodeWithUTF8Alphabet(src+i,&ret,len-i);
-		if (z<2) {
-			i+=EncodeWithUnicodeAlphabet(&src[i], &ret);
-		} else {
-			i+=z;
+		z = DecodeWithUTF8Alphabet(src+i, &ret, len - i);
+		if (z < 1) {
+			break;
 		}
-		dest[j++] = (ret >> 8) & 0xff;
-		dest[j++] = ret & 0xff;
+		i += z;
+		if (StoreUTF16(dest + j, ret)) {
+			j += 4;
+		} else {
+			j += 2;
+		}
 	}
 	dest[j++] = 0;
 	dest[j] = 0;
@@ -2051,7 +2130,7 @@ void DecodeXMLUTF8(unsigned char *dest, const char *src, size_t len)
 void DecodeUTF7(unsigned char *dest, const unsigned char *src, size_t len)
 {
 	size_t 		i=0,j=0,z,p;
-	wchar_t		ret;
+	gammu_char_t		ret;
 
 	while (i<=len) {
 		if (len-5>=i) {
@@ -2064,13 +2143,19 @@ void DecodeUTF7(unsigned char *dest, const unsigned char *src, size_t len)
 				i+=z+2;
 			} else {
 				i+=EncodeWithUnicodeAlphabet(&src[i], &ret);
-				dest[j++] = (ret >> 8) & 0xff;
-				dest[j++] = ret & 0xff;
+				if (StoreUTF16(dest + j, ret)) {
+					j += 4;
+				} else {
+					j += 2;
+				}
 			}
 		} else {
 			i+=EncodeWithUnicodeAlphabet(&src[i], &ret);
-			dest[j++] = (ret >> 8) & 0xff;
-			dest[j++] = ret & 0xff;
+			if (StoreUTF16(dest + j, ret)) {
+				j += 4;
+			} else {
+				j += 2;
+			}
 		}
 	}
 	dest[j++] = 0;
