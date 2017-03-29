@@ -5,11 +5,11 @@
 
 %define so_ver 8
 
-# Change if using tar.gz sources
-%define extension   bz2
+# Change if using tar.gz or tar.bz2 sources
+%define extension   xz
 
 Name:           gammu
-Version:        1.38.0
+Version:        1.38.3
 Release:        0
 Summary:        Mobile phone management utility
 License:        GPL-2.0
@@ -92,7 +92,7 @@ Source0:        https://dl.cihar.com/gammu/releases/%{name}-%{version}.tar.%{ext
 %endif
 %endif
 %endif
-BuildRequires:  cmake >= 2.8
+BuildRequires:  cmake >= 3.0
 BuildRequires:  gcc
 BuildRequires:  gettext
 BuildRequires:  pkgconfig
@@ -279,8 +279,7 @@ cmake ../ \
     -DINSTALL_LSB_INIT=ON \
     -DINSTALL_UDEV_RULES=ON \
     -DSYSTEMD_FOUND=ON \
-    -DWITH_SYSTEMD=ON \
-    -DSYSTEMD_SERVICES_INSTALL_DIR=%{_libexecdir}/systemd/system
+    -DWITH_SYSTEMD=ON
 make %{?_smp_mflags} VERBOSE=1
 
 %check
@@ -332,7 +331,7 @@ fi
 %if 0%{?fedora_version} || 0%{?centos_version} || 0%{?rhel_version} || 0%{?fedora} || 0%{?rhel}
 if [ $1 = 0 ] ; then
     /sbin/service gammu-smsd stop >/dev/null 2>&1
-    /sbin/chkconfig --del <script>
+    /sbin/chkconfig --del gammu-smsd
 fi
 %endif
 

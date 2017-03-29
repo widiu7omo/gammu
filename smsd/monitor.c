@@ -1,7 +1,7 @@
 /**
  * SMSD message monitor program
  */
-/* Copyright (c) 2009 - 2015 Michal Cihar <michal@cihar.com> */
+/* Copyright (c) 2009 - 2017 Michal Cihar <michal@cihar.com> */
 /* Licensend under GNU GPL 2 */
 
 #include <gammu-smsd.h>
@@ -63,7 +63,7 @@ NORETURN void version(void)
 	printf("  - %s\n", "ODBC");
 #endif
 	printf("\n");
-	printf("Copyright (C) 2003 - 2016 Michal Cihar <michal@cihar.com> and other authors.\n");
+	printf("Copyright (C) 2003 - 2017 Michal Cihar <michal@cihar.com> and other authors.\n");
 	printf("\n");
 	printf("License GPLv2: GNU GPL version 2 <https://spdx.org/licenses/GPL-2.0>.\n");
 	printf("This is free software: you are free to change and redistribute it.\n");
@@ -98,7 +98,7 @@ void help(void)
 	print_option_param("d", "delay", "DELAY",
 			   "delay in seconds between loops");
 	print_option_param("n", "loops", "NUMBER",
-			   "delay in seconds between loops");
+			   "number of loops");
 	print_option("l", "use-log", "use logging configuration from config file");
 	print_option("L", "no-use-log", "do not use logging configuration from config file (default)");
 }

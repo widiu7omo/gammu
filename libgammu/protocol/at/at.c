@@ -12,9 +12,10 @@
 #include "at.h"
 
 static GSM_Error AT_WriteMessage (GSM_StateMachine *s, unsigned const char *buffer,
-				     int length, int type)
+				     size_t length, int type)
 {
-	int sent=0, write_data=0, i=0;
+	size_t sent=0, i=0;
+	ssize_t write_data=0;
 
 	GSM_DumpMessageText(s, buffer, length, type);
 	GSM_DumpMessageBinary(s, buffer, length, type);
@@ -137,6 +138,9 @@ GSM_Error AT_StateMachine(GSM_StateMachine *s, unsigned char rx_char)
 		{"^SRVST:"	,1, ID_All}, /* ^SRVST:0 */
 		{"^SIMST:"	,1, ID_All}, /* ^SIMST:1 */
 		{"^STIN:"	,1, ID_All}, /* ^STIN: 7, 0, 0 */
+
+		/* D-Link */
+		{"+SPNWNAME:"	,1, ID_All}, /* +SPNWNAME: "432", "11", "Mci", "Mci" */
 
 		/* ONDA */
 		{"+ZUSIMR:"	,1, ID_All}, /* +ZUSIMR:2 */

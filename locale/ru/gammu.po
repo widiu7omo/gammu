@@ -5,7 +5,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Gammu 1.38.0\n"
+"Project-Id-Version: Gammu 1.38.2\n"
 "Report-Msgid-Bugs-To: gammu-users@lists.sourceforge.net\n"
 "POT-Creation-Date: 2016-10-11 08:16+0200\n"
 "PO-Revision-Date: 2015-10-13 04:57+0200\n"
@@ -1551,7 +1551,7 @@ msgstr "Проверка последовательного порта Windows"
 #| "Copyright (C) 2010 - 2011 Michal Cihar <michal@cihar.com> and other "
 #| "authors."
 msgid ""
-"Copyright (C) 2010 - 2016 Michal Cihar <michal@cihar.com> and other authors."
+"Copyright (C) 2010 - 2017 Michal Cihar <michal@cihar.com> and other authors."
 msgstr ""
 "Copyright (C) 2010 - 2011 Michal Cihar <michal@cihar.com> и другие авторы."
 
@@ -1818,7 +1818,7 @@ msgstr "ИНФО: Есть более новая тестовая версия G
 #| "Copyright (C) 2003 - 2012 Michal Cihar <michal@cihar.com> and other "
 #| "authors."
 msgid ""
-"Copyright (C) 2003 - 2016 Michal Cihar <michal@cihar.com> and other authors."
+"Copyright (C) 2003 - 2017 Michal Cihar <michal@cihar.com> and other authors."
 msgstr ""
 "Copyright (C) 2003 - 2012 Michal Cihar <michal@cihar.com> и другие авторы."
 
