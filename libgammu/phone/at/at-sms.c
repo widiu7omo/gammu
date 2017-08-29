@@ -33,7 +33,7 @@
 #include "atgen.h"
 #include "atfunc.h"
 
-#include "../../../helper/string.h"
+#include "../../../libgammu/misc/string.h"
 
 GSM_Error ATGEN_SetSMSC(GSM_StateMachine *s, GSM_SMSC *smsc)
 {
@@ -889,6 +889,7 @@ GSM_Error ATGEN_ReplyGetSMSMessage(GSM_Protocol_Message *msg, GSM_StateMachine *
 						}
 						break;
 					}
+					FALLTHROUGH;
 				case SMS_Coding_Unicode_No_Compression:
 				case SMS_Coding_8bit:
 					if ((firstbyte & 0x40)==0x40 && GSM_IsPhoneFeatureAvailable(s->Phone.Data.ModelInfo, F_SMS_UTF8_ENCODED)) {
@@ -1716,6 +1717,7 @@ GSM_Error ATGEN_MakeSMSFrame(GSM_StateMachine *s, GSM_SMSMessage *message, unsig
 				}
 				break;
 			}
+			FALLTHROUGH;
 	        case SMS_Coding_Unicode_No_Compression:
 	        case SMS_Coding_8bit:
 			error = PHONE_EncodeSMSFrame(s,message,buffer,PHONE_SMSDeliver,current,TRUE);

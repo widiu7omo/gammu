@@ -21,7 +21,7 @@
 #include <sql.h>
 #include <sqlext.h>
 
-#include "../../helper/string.h"
+#include "../../libgammu/misc/string.h"
 #include "../core.h"
 #include "sql.h"
 #include "sql-core.h"
@@ -125,8 +125,13 @@ const char *SMSDODBC_GetString(GSM_SMSDConfig * Config, SQL_result *res, unsigne
 
 gboolean SMSDODBC_GetBool(GSM_SMSDConfig * Config, SQL_result *res, unsigned int field)
 {
-	long long intval;
+	long long intval = 0;
 	const char * charval;
+
+	/* Try bit field */
+	if (SQL_SUCCEEDED(SQLGetData(res->odbc, field + 1, SQL_C_BIT, &intval, 0, NULL))) {
+		return intval ? TRUE : FALSE;
+	}
 
 	/* Try to get numeric value first */
 	intval = SMSDODBC_GetNumber(Config, res, field);
@@ -272,6 +277,7 @@ char * SMSDODBC_QuoteString(GSM_SMSDConfig * Config, const char *string)
 			strncasecmp(driver_name, "sqlite", 6) == 0 ||
 			strncasecmp(driver_name, "oracle", 6) == 0 ||
 			strncasecmp(driver_name, "freetds", 6) == 0 ||
+			strncasecmp(driver_name, "mssql", 6) == 0 ||
 			strcasecmp(Config->driver, "access") == 0) {
 		quote = '\'';
 	}

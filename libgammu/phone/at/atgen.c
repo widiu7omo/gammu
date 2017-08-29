@@ -39,7 +39,7 @@
 #include "motorola.h"
 #include "sonyericsson.h"
 
-#include "../../../helper/string.h"
+#include "../../../libgammu/misc/string.h"
 
 #ifdef GSM_ENABLE_ALCATEL
 GSM_Error ALCATEL_ProtocolVersionReply (GSM_Protocol_Message *, GSM_StateMachine *);
@@ -1655,6 +1655,10 @@ GSM_Error ATGEN_ReplyGetUSSD(GSM_Protocol_Message *msg, GSM_StateMachine *s)
 
 		if (error != ERR_NONE) return error;
 
+		/* Try to parse text here, we ignore error code intentionally */
+		ussd.Text[0] = 0;
+		ussd.Text[1] = 0;
+
 		/* Decode status */
 		smprintf(s, "Status: %d\n", code);
 		switch(code) {
@@ -1672,17 +1676,13 @@ GSM_Error ATGEN_ReplyGetUSSD(GSM_Protocol_Message *msg, GSM_StateMachine *s)
 				break;
 			case 4:
 				ussd.Status = USSD_NotSupported;
-				break;
+				return ERR_NETWORK_ERROR;
 			case 5:
 				ussd.Status = USSD_Timeout;
-				break;
+				return ERR_TIMEOUT;
 			default:
 				ussd.Status = USSD_Unknown;
 		}
-
-		/* Try to parse text here, we ignore error code intentionally */
-		ussd.Text[0] = 0;
-		ussd.Text[1] = 0;
 
 		error = ATGEN_ParseReply(s, pos,
 					"+CUSD: @i, @r, @i @0",
@@ -4395,10 +4395,10 @@ GSM_Error ATGEN_DialService(GSM_StateMachine *s, char *number)
 
 	len = strlen(number);
 	/*
-	 * We need to allocate twice more memory for number here, because it
-	 * might be encoded later.
+	 * We need to allocate four times more memory for number here, because it
+	 * might be encoded later to UCS2.
 	 */
-	allocsize = 2 * (len + 1);
+	allocsize = 4 * (len + 1);
 	req = (char *)malloc(strlen(format) + allocsize + 1);
 
 	if (req == NULL) {
@@ -4496,7 +4496,7 @@ GSM_Error ATGEN_EnterSecurityCode(GSM_StateMachine *s, GSM_SecurityCode *Code)
 {
 	GSM_Error error;
 	GSM_SecurityCodeType Status;
-	unsigned char req[GSM_SECURITY_CODE_LEN + 12] = {'\0'};
+	unsigned char req[GSM_SECURITY_CODE_LEN + 30] = {'\0'};
 	size_t len;
 
 	if (Code->Type == SEC_Pin2 &&

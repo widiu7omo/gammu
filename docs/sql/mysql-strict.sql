@@ -18,7 +18,7 @@ CREATE TABLE `gammu` (
 -- Dumping data for table `gammu`
 -- 
 
-INSERT INTO `gammu` (`Version`) VALUES (16);
+INSERT INTO `gammu` (`Version`) VALUES (17);
 
 -- --------------------------------------------------------
 
@@ -74,6 +74,8 @@ CREATE TABLE `outbox` (
   `CreatorID` text NOT NULL,
   `Retries` int(3) default 0,
   `Priority` integer default 0,
+  `Status` enum('SendingOK','SendingOKNoReport','SendingError','DeliveryOK','DeliveryFailed','DeliveryPending','DeliveryUnknown','Error','Reserved') NOT NULL default 'Reserved',
+  `StatusCode` integer NOT NULL default '-1',
   PRIMARY KEY `ID` (`ID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
@@ -99,6 +101,8 @@ CREATE TABLE `outbox_multipart` (
   `TextDecoded` text,
   `ID` integer unsigned NOT NULL default '0',
   `SequencePosition` integer NOT NULL default '1',
+  `Status` enum('SendingOK','SendingOKNoReport','SendingError','DeliveryOK','DeliveryFailed','DeliveryPending','DeliveryUnknown','Error','Reserved') NOT NULL default 'Reserved',
+  `StatusCode` integer NOT NULL default '-1',
   PRIMARY KEY (`ID`, `SequencePosition`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
@@ -161,6 +165,7 @@ CREATE TABLE `sentitems` (
   `TPMR` integer NOT NULL default '-1',
   `RelativeValidity` integer NOT NULL default '-1',
   `CreatorID` text NOT NULL,
+  `StatusCode` integer NOT NULL default '-1',
   PRIMARY KEY (`ID`, `SequencePosition`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 

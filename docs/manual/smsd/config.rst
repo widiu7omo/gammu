@@ -169,7 +169,8 @@ General parameters of SMS daemon
 
 .. config:option:: CommTimeout
 
-    How many seconds should SMSD wait after there is no message in outbox.
+    How many seconds should SMSD wait after there is no message in outbox
+    before scanning it again.
 
     Default is 30.
 
@@ -200,7 +201,9 @@ General parameters of SMS daemon
     The number of seconds between refreshing phone status (battery, signal) stored
     in shared memory and possibly in service backends. Use 0 to disable.
 
-    Default is 15.
+    You might want to increase this for higher throughput.
+
+    Default is 60.
 
 .. config:option:: LoopSleep
 
@@ -210,7 +213,13 @@ General parameters of SMS daemon
     rounded to multiply of this value.
 
     Setting this to 0 disables sleeping. Please note this might cause Gammu to
-    consume quite a lot of CPU power.
+    consume quite a lot of CPU power as it will effectively do busy loop.
+
+    This sleep is utilized only if the main loop (sending and receiving
+    messages) takes less than defined time. For example if you set LoopSleep to
+    5 seconds and sending messages take 10 seconds, no sleep will be done in
+    the iteration which is sending messages. Also the sleep time is lowered by
+    the already processed time.
 
     Default is 1.
 
@@ -371,6 +380,15 @@ General parameters of SMS daemon
 
     The program will receive optional parameter a message ID and environment
     with message details as described in :ref:`gammu-smsd-run`.
+
+.. config:option:: RunOnIncomingCall
+
+    .. versionadded:: 1.38.5
+
+    Executes a program after cancelling incoming call.
+
+    The program will receive a parameter with a phone number of the call.
+    This requires :config:option:`HangupCalls` to be enabled.
 
 .. config:option:: IncludeNumbersFile
 

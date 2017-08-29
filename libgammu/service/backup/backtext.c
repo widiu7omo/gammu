@@ -18,7 +18,7 @@
 #include "../../debug.h"
 #include "backtext.h"
 
-#include "../../../helper/string.h"
+#include "../../../libgammu/misc/string.h"
 
 #ifdef GSM_ENABLE_BACKUP
 
@@ -936,6 +936,7 @@ static GSM_Error SaveWAPSettingsEntry(FILE *file, GSM_MultiWAPSettings *settings
 				sprintf(buffer,"IP%02i",i);
 				error = SaveBackupText(file, buffer, settings->Settings[i].IPAddress, UseUnicode);
 				if (error != ERR_NONE) return error;
+				FALLTHROUGH;
 			case WAPSETTINGS_BEARER_DATA:
 				if (settings->Settings[i].Bearer == WAPSETTINGS_BEARER_DATA) {
 					sprintf(buffer,"Bearer%02i = Data%c%c",i,13,10);

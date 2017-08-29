@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GAMMU-SMSD-RUN" "7" "Mar 28, 2017" "1.38.3" "Gammu"
+.TH "GAMMU-SMSD-RUN" "7" "Jun 18, 2017" "1.38.5" "Gammu"
 .SH NAME
 gammu-smsd-run \- documentation for RunOnReceive directive
 .
@@ -102,6 +102,11 @@ Sender number.
 .TP
 .B SMS_1_TEXT
 Message text. Text is not available for 8\-bit binary messages.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B SMS_1_REFERENCE
+Message Reference. If delivery status received, this variable contains TPMR of original message
 .UNINDENT
 .SS Per part variables
 .sp

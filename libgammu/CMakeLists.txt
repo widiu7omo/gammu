@@ -12,8 +12,10 @@ set (LIBRARY_SRC
     gsmstate.c
     api.c
     debug.c
+    misc/array.c
     misc/misc.c
     misc/cfg.c
+    misc/string.c
     misc/coding/coding.c
     service/sms/gsmsms.c
     service/sms/gsmems.c
@@ -73,6 +75,15 @@ set (LIBRARY_SRC
     phone/symbian/gnapgen.c
     phone/s60/s60phone.c)
 
+if (NOT HAVE_STRPTIME)
+    list (APPEND LIBRARY_SRC misc/strptime.c)
+endif (NOT HAVE_STRPTIME)
+
+# dirent emulation layer
+if(WIN32 AND NOT CMAKE_COMPILER_IS_MINGW AND NOT CMAKE_COMPILER_IS_CYGWIN)
+    list (APPEND LIBRARY_SRC misc/win32-dirent.c)
+endif(WIN32 AND NOT CMAKE_COMPILER_IS_MINGW AND NOT CMAKE_COMPILER_IS_CYGWIN)
+
 # Own or glib based MD5 implementation
 if (Glib_FOUND)
     list (APPEND LIBRARY_SRC misc/coding/md5-glib.c)
@@ -130,8 +141,6 @@ if(CMAKE_COMPILER_IS_MINGW AND BUILD_SHARED_LIBS)
 endif(CMAKE_COMPILER_IS_MINGW AND BUILD_SHARED_LIBS)
 
 
-target_link_libraries (libGammu string)
-
 if (Glib_FOUND)
     target_link_libraries (libGammu ${Glib_LIBRARIES} ${GObject_LIBRARIES})
     include_directories(${Glib_INCLUDE_DIRS} ${GObject_INCLUDE_DIRS})
@@ -174,11 +183,6 @@ if (LIBINTL_LIB_FOUND AND LIBINTL_LIBRARIES)
     target_link_libraries (libGammu ${LIBINTL_LIBRARIES})
     include_directories (${LIBINTL_INCLUDE_DIR})
 endif (LIBINTL_LIB_FOUND AND LIBINTL_LIBRARIES)
-
-# dirent emulation layer
-if(WIN32 AND NOT CMAKE_COMPILER_IS_MINGW AND NOT CMAKE_COMPILER_IS_CYGWIN)
-    target_link_libraries (libGammu win32dirent)
-endif(WIN32 AND NOT CMAKE_COMPILER_IS_MINGW AND NOT CMAKE_COMPILER_IS_CYGWIN)
 
 # Include search path
 include_directories ("${CMAKE_CURRENT_BINARY_DIR}/../include")
