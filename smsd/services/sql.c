@@ -49,7 +49,7 @@ const char now_plus_pgsql[] = "now() + interval '%d seconds'";
 const char now_plus_sqlite[] = "datetime('now', '+%d seconds', 'localtime')";
 const char now_plus_freetds[] = "DATEADD('second', %d, CURRENT_TIMESTAMP)";
 const char now_plus_access[] = "now()+#00:00:%d#";
-const char now_plus_oracle[] = "CURRENT_TIMESTAMP + INTERVAL '%d' SECOND'";
+const char now_plus_oracle[] = "CURRENT_TIMESTAMP + INTERVAL '%d' SECOND";
 const char now_plus_fallback[] = "NOW() + INTERVAL %d SECOND";
 
 
@@ -99,7 +99,9 @@ static const char *SMSDSQL_EscapeChar(GSM_SMSDConfig * Config)
 		return escape_char_pgsql;
 	} else if (strncasecmp(driver_name, "sqlite", 6) == 0) {
 		return escape_char_sqlite;
-	} else if (strcasecmp(driver_name, "oracle") == 0 || strcasecmp(driver_name, "freetds") == 0 || strcasecmp(driver_name, "mssql") == 0 || strcasecmp(driver_name, "sybase") == 0) {
+	} else if (strcasecmp(driver_name, "oracle") == 0) {
+		return escape_char_fallback;
+	} else if (strcasecmp(driver_name, "freetds") == 0 || strcasecmp(driver_name, "mssql") == 0 || strcasecmp(driver_name, "sybase") == 0) {
 		return escape_char_freetds;
 	} else if (strcasecmp(Config->driver, "odbc") == 0 || strcasecmp(Config->driver, "mssql") == 0) {
 		return escape_char_odbc;
@@ -222,9 +224,9 @@ static const char *SMSDSQL_Now(GSM_SMSDConfig * Config)
 		return now_pgsql;
 	} else if (strncasecmp(driver_name, "sqlite", 6) == 0) {
 		return now_sqlite;
-	} else if (strcasecmp(Config->driver, "oracle") == 0 || strcasecmp(driver_name, "freetds") == 0 || strcasecmp(driver_name, "mssql") == 0 || strcasecmp(driver_name, "sybase") == 0) {
+	} else if (strcasecmp(driver_name, "oracle") == 0 || strcasecmp(driver_name, "freetds") == 0 || strcasecmp(driver_name, "mssql") == 0 || strcasecmp(driver_name, "sybase") == 0) {
 		return now_freetds;
-	} else if (strcasecmp(Config->driver, "access") == 0) {
+	} else if (strcasecmp(driver_name, "access") == 0) {
 		return now_access;
 	} else if (strcasecmp(Config->driver, "odbc") == 0) {
 		return now_odbc;
@@ -384,7 +386,16 @@ static GSM_Error SMSDSQL_NamedQuery(GSM_SMSDConfig * Config, const char *sql_que
 				if (sms != NULL) {
 					switch (c) {
 						case 'R':
-							EncodeUTF8(static_buff, sms->Number);
+							/*
+							 * Always store international numnbers with + prefix
+							 * to allow easy matching later.
+							 */
+							if (sms->Number[0] == '0' && sms->Number[1] == '0') {
+								static_buff[0] = '+';
+								EncodeUTF8(static_buff + 1, sms->Number + 2);
+							} else {
+								EncodeUTF8(static_buff, sms->Number);
+							}
 							to_print = static_buff;
 							break;
 						case 'F':
@@ -1482,8 +1493,9 @@ GSM_Error SMSDSQL_ReadConfiguration(GSM_SMSDConfig *Config)
 			", ", ESCAPE_FIELD("UDH"),
 			", ", ESCAPE_FIELD("Class"),
 			", ", ESCAPE_FIELD("TextDecoded"),
-			", ", ESCAPE_FIELD("RecipientID"), ")"
-			" VALUES (%d, %E, %R, %c, %F, %u, %x, %T, %P)", NULL) != ERR_NONE) {
+			", ", ESCAPE_FIELD("RecipientID"),
+			", ", ESCAPE_FIELD("Status"), ")",
+			" VALUES (%d, %E, %R, %c, %F, %u, %x, %T, %P, %e)", NULL) != ERR_NONE) {
 		return ERR_UNKNOWN;
 	}
 

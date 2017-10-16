@@ -28,6 +28,13 @@ ChangeLog
 [+] * Added RunOnIncomingCall to SMSD.
 [-] * Fixed SQL error when retry of multipart message
 [*] * Added status code column
+[-] * Fixed some SQL queries for Access and Oracle databases.
+[-] * Add option to prefer GSM charset for USSD.
+[-] * Sanitize international numbers stored in the database to always start with +.
+[-] * Improved support for Telit devices.
+[+] * Added USSD support to SMSD.
+[-] * Fixed call hangup in SMSD with some modems.
+[-] * Fixed decoding USSD response with some modems.
 
 20170618 - 1.38.4
 
