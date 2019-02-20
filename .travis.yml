@@ -8,6 +8,8 @@ env:
     - ARGS=""
   global:
     - CTEST_OUTPUT_ON_FAILURE=1
+    - CXX=g++-7
+    - CC=gcc-7
     - TESTARGS="-DMYSQL_TESTING=on -DPSQL_TESTING=ON -DMYSQL_USER=root -DPSQL_USER=postgres -DPSQL_PASSWORD= -DODBC_TESTING=ON -DODBC_DSN=ODBCTest" 
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     #   via the "travis encrypt" command using the project repo's public key
