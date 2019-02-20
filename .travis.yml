@@ -1,7 +1,5 @@
 os:
   - linux
-dist:
-  - trusty
 language: cpp
 compiler:
   - gcc
@@ -20,8 +18,6 @@ before_script:
   - mkdir _build
   - cd _build
 script:
-  - echo
-after_failure:
   - if [ -f cov-int/build-log.txt ] ; then cat cov-int/build-log.txt ; fi
 # install build dependencies and enable Coverity scan
 addons:
