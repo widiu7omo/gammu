@@ -43,6 +43,6 @@ addons:
       name: "gammu/gammu"
       description: "Build submitted via Travis CI"
     notification_email: michal@cihar.com
-    build_command_prepend: "export CC=gcc-7 && export CXX=g++-7 && cov-configure --comptype gcc --compiler `which $CC` -- -fPIC && cmake .."
+    build_command_prepend: "export CC=gcc-7 && export CXX=g++-7 && cov-configure --comptype gcc --compiler `which gcc-7` -- -fPIC && cmake .."
     build_command: make
     branch_pattern: coverity_scan
