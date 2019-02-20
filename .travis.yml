@@ -20,6 +20,8 @@ before_script:
   - export CXX=g++-7
   - export CC=gcc-7
 script:
+  - echo
+after_script:
   - if [ -f cov-int/build-log.txt ] ; then cat cov-int/build-log.txt ; fi
 # install build dependencies and enable Coverity scan
 addons:
