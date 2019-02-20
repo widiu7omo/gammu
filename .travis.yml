@@ -19,6 +19,7 @@ before_script:
   - cd _build
   - export CXX=g++-7
   - export CC=gcc-7
+  - export COVERITY_SITE_CC="gcc-7;g++-7"
 script:
   - echo
 after_script:
