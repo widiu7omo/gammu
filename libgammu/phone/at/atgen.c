@@ -282,6 +282,24 @@ static ATErrorCode CMEErrorCodes[] = {
 
 static char samsung_location_error[] = "[Samsung] Empty location";
 
+gboolean ATGEN_IsMemoryAvailable(const GSM_Phone_ATGENData *data, GSM_MemoryType type)
+{
+	return
+			(type == MEM_ME && data->PhoneSMSMemory == AT_AVAILABLE) ||
+			(type == MEM_SM && data->SIMSMSMemory == AT_AVAILABLE) ||
+			(type == MEM_MT && (data->PhoneSMSMemory == AT_AVAILABLE || data->SIMSMSMemory == AT_AVAILABLE)) ||
+			(type == MEM_SR && data->SRSMSMemory == AT_AVAILABLE);
+}
+
+gboolean ATGEN_IsMemoryWriteable(const GSM_Phone_ATGENData *data, GSM_MemoryType type)
+{
+	// we assume that if memory is writeable, then it's also enabled
+	return
+			(type == MEM_ME && data->PhoneSaveSMS == AT_AVAILABLE) ||
+			(type == MEM_SM && data->SIMSaveSMS == AT_AVAILABLE) ||
+			(type == MEM_MT && (data->PhoneSaveSMS == AT_AVAILABLE || data->SIMSaveSMS == AT_AVAILABLE)) ||
+			(type == MEM_SR && data->SRSaveSMS == AT_AVAILABLE);
+}
 
 GSM_Error ATGEN_HandleCMEError(GSM_StateMachine *s)
 {
@@ -1622,7 +1640,6 @@ GSM_Error ATGEN_ReplyGetUSSD(GSM_Protocol_Message *msg, GSM_StateMachine *s)
 	unsigned char *pos = NULL;
 	int code = 0;
 	int dcs = 0;
-	int offset = 0;
 	GSM_Coding_Type coding;
 	char hex_encoded[2 * (GSM_MAX_USSD_LENGTH + 1)] = {0};
 	char packed[GSM_MAX_USSD_LENGTH + 1] = {0};
@@ -1713,7 +1730,6 @@ GSM_Error ATGEN_ReplyGetUSSD(GSM_Protocol_Message *msg, GSM_StateMachine *s)
 						/* GSM-7 */
 						coding = SMS_Coding_Default_No_Compression;
 					} else if ((dcs & 0xf) == 1) {
-						offset = 2;
 						coding = SMS_Coding_Unicode_No_Compression;
 					} else {
 						smprintf(s, "WARNING: unknown DCS: 0x%02x\n", dcs);
@@ -1739,7 +1755,7 @@ GSM_Error ATGEN_ReplyGetUSSD(GSM_Protocol_Message *msg, GSM_StateMachine *s)
 					}
 				}
 			} else if (coding == SMS_Coding_Unicode_No_Compression) {
-				DecodeHexUnicode(ussd.Text, hex_encoded + offset, strlen(hex_encoded));
+				DecodeHexUnicode(ussd.Text, hex_encoded, strlen(hex_encoded));
 			} else if (coding == SMS_Coding_8bit) {
 				DecodeHexBin(decoded, hex_encoded, strlen(hex_encoded));
 				GSM_UnpackEightBitsToSeven(0, strlen(hex_encoded), sizeof(decoded), packed, decoded);
@@ -3193,6 +3209,7 @@ GSM_Error ATGEN_ReplyGetNetworkName(GSM_Protocol_Message *msg, GSM_StateMachine 
 
 		/* Cleanup if something went wrong */
 		if (error != ERR_NONE) {
+		  smprintf(s, "WARNING: Failed to store network name - ERROR(%s)", GSM_ErrorName(error));
 			NetworkInfo->NetworkName[0] = 0;
 			NetworkInfo->NetworkName[1] = 0;
 		}
@@ -4397,7 +4414,7 @@ GSM_Error ATGEN_DialService(GSM_StateMachine *s, char *number)
 	char *req = NULL,*encoded = NULL;
 	unsigned char *tmp = NULL;
 	const char format[] = "AT+CUSD=%d,\"%s\",15\r";
-	size_t len = 0, allocsize;
+	size_t len = 0, allocsize, sevenlen = 0;
 
 	len = strlen(number);
 	/*
@@ -4430,8 +4447,14 @@ GSM_Error ATGEN_DialService(GSM_StateMachine *s, char *number)
 		free(encoded);
 		return ERR_MOREMEMORY;
 	}
-	EncodeUnicode(tmp, number, strlen(number));
-	error = ATGEN_EncodeText(s, tmp, len, encoded, allocsize, &len);
+	if (GSM_IsPhoneFeatureAvailable(s->Phone.Data.ModelInfo, F_ENCODED_USSD)) {
+		/* This is against GSM specs, but Huawei seems to use this */
+		sevenlen = GSM_PackSevenBitsToEight(0, number, tmp, len);
+		EncodeHexBin(encoded, tmp, sevenlen);
+	} else {
+		EncodeUnicode(tmp, number, strlen(number));
+		error = ATGEN_EncodeText(s, tmp, len, encoded, allocsize, &len);
+	}
 	free(tmp);
 	if (error != ERR_NONE) {
 		free(req);
@@ -4632,6 +4655,29 @@ GSM_Error ATGEN_GetSecurityStatus(GSM_StateMachine *s, GSM_SecurityCodeType *Sta
 	/* Read the possible left over OK */
 	GSM_WaitForOnce(s, NULL, 0x00, 0x00, 4);
 	return error;
+}
+
+GSM_Error ATGEN_ReplyAnswerCall(GSM_Protocol_Message *msg UNUSED, GSM_StateMachine *s)
+{
+	GSM_Call call;
+
+	switch(s->Phone.Data.Priv.ATGEN.ReplyState) {
+		case AT_Reply_OK:
+			smprintf(s, "Calls answered\n");
+			call.CallIDAvailable = FALSE;
+			call.Status = GSM_CALL_CallEstablished;
+
+			if (s->User.IncomingCall) {
+				s->User.IncomingCall(s, &call, s->User.IncomingCallUserData);
+			}
+			return ERR_NONE;
+		case AT_Reply_CMSError:
+			return ATGEN_HandleCMSError(s);
+		case AT_Reply_CMEError:
+			return ATGEN_HandleCMEError(s);
+		default:
+			return ERR_UNKNOWN;
+	}
 }
 
 GSM_Error ATGEN_AnswerCall(GSM_StateMachine *s, int ID UNUSED, gboolean all)
@@ -6170,6 +6216,7 @@ GSM_Reply_Function ATGENReplyFunctions[] = {
 {ATGEN_ReplyCancelCall,		"AT+CHUP"		,0x00,0x00,ID_CancelCall	 },
 {ATGEN_ReplyDialVoice,		"ATD"			,0x00,0x00,ID_DialVoice		 },
 {ATGEN_ReplyCancelCall,		"ATH"			,0x00,0x00,ID_CancelCall	 },
+{ATGEN_ReplyAnswerCall,		"ATA"			,0x00,0x00,ID_AnswerCall	 },
 {ATGEN_GenericReply, 		"AT+CRC"		,0x00,0x00,ID_SetIncomingCall	 },
 {ATGEN_GenericReply, 		"AT+CLIP"		,0x00,0x00,ID_SetIncomingCall	 },
 {ATGEN_GenericReply, 		"AT+CCWA"		,0x00,0x00,ID_SetIncomingCall	 },
@@ -6237,7 +6284,7 @@ GSM_Reply_Function ATGENReplyFunctions[] = {
 {ATGEN_GenericReplyIgnore, 	"+ZUSIMR:"		,0x00,0x00,ID_IncomingFrame	 },
 {ATGEN_GenericReplyIgnore, 	"+SPNWNAME:"		,0x00,0x00,ID_IncomingFrame	 },
 {ATGEN_GenericReplyIgnore, 	"+ZEND"			,0x00,0x00,ID_IncomingFrame	 },
-{ATGEN_GenericReplyIgnore, 	"+CDSI:"		,0x00,0x00,ID_IncomingFrame	 },
+{ATGEN_IncomingSMSInfo,		  "+CDSI:" 	 	,0x00,0x00,ID_IncomingFrame	 },
 {ATGEN_GenericReplyIgnore,	"+CLCC:"		,0x00,0x00,ID_IncomingFrame	 },
 {ATGEN_GenericReplyIgnore,	"#STN:"			,0x00,0x00,ID_IncomingFrame	 },
 

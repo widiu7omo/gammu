@@ -1,5 +1,5 @@
 ChangeLog for Gammu project <https://wammu.eu/gammu/>
-===================================================
+=====================================================
 
 Description
 ===========
@@ -19,7 +19,25 @@ the issue.
 ChangeLog
 =========
     
-2017???? - 1.38.5
+20190128 - 1.40.0
+    
+[+] * Added SMSD configuration option RetryTimeout.
+[-] * Removed non configurable sleep after failed message send.
+[+] * SMSD now tries to store whole decoded text for concatenated
+      messages in the first entry in database.
+[-] * Improved compatibility with Sierra SL8084TR.
+[+] * Added support for delivery reports stored in SR memory.
+[+] * Configure CNMI parameters for AT driver.
+
+20180105 - 1.39.0
+    
+[-] * Fixed answering call in AT module.
+[-] * Improved support for Huawei E392 and E3131.
+[-] * Fixed compatibility of binaries with Windows XP and 2003.
+[-] * Improved support for ZTE MF667.
+[-] * Updated list of GSM networks and countries.
+
+20171018 - 1.38.5
 
 [+] * Added SMS_1_REFERENCE to SMSD run on receive environment
 [-] * Improved logging of run scripts in SMSD

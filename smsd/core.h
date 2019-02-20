@@ -1,5 +1,5 @@
 /* (c) 2002-2004 by Marcin Wiacek and Joergen Thomsen */
-/* Copyright (c) 2009 - 2017 Michal Cihar <michal@cihar.com> */
+/* Copyright (c) 2009 - 2018 Michal Cihar <michal@cihar.com> */
 
 #ifndef __core_h_
 #define __core_h_
@@ -96,6 +96,7 @@ struct _GSM_SMSDConfig {
 	gboolean enable_send;
 	gboolean enable_receive;
 	unsigned int maxretries;
+	unsigned int retrytimeout;
 	int backend_retries;
 
 	/* options for FILES */
@@ -146,7 +147,7 @@ struct _GSM_SMSDConfig {
 	 * Address of the database (eg. hostname).
 	 */
 	const char	*host;
-        char 		DT[40];
+        char 		DT[200];
 	char		CreatorID[200];
 	/* database data structure */
 	struct GSM_SMSDdbobj *db;

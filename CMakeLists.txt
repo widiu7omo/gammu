@@ -1,5 +1,5 @@
 # cmake <https://cmake.org/> build file for Gammu
-# Copyright (c) 2007 - 2017 Michal Cihar
+# Copyright (c) 2007 - 2018 Michal Cihar
 # vim: expandtab sw=4 ts=4 sts=4:
 
 cmake_minimum_required (VERSION 3.0)
@@ -28,7 +28,7 @@ if (LARGE_FILES)
 endif (LARGE_FILES)
 
 # Set version
-set (GAMMU_VERSION "1.38.5" CACHE INTERNAL "")
+set (GAMMU_VERSION "1.40.0" CACHE INTERNAL "")
 string (REGEX REPLACE "^([0-9]*)\\.([0-9]*)\\.([0-9]*)$" "\\1" "GAMMU_VERSION_MAJOR" "${GAMMU_VERSION}")
 string (REGEX REPLACE "^([0-9]*)\\.([0-9]*)\\.([0-9]*)$" "\\2" "GAMMU_VERSION_MINOR" "${GAMMU_VERSION}")
 string (REGEX REPLACE "^([0-9]*)\\.([0-9]*)\\.([0-9]*)$" "\\3" "GAMMU_VERSION_PATCH" "${GAMMU_VERSION}")
@@ -178,9 +178,6 @@ find_program(PSQL_BIN psql)
 endif()
 
 find_package (Threads)
-
-# Check for Python
-find_package(PythonInterp 2)
 
 # Packages in sources
 macro_optional_find_package (MySQL)
@@ -813,7 +810,6 @@ set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/installer/license.
 set (CPACK_PACKAGE_VERSION_MAJOR "${GAMMU_VERSION_MAJOR}")
 set (CPACK_PACKAGE_VERSION_MINOR "${GAMMU_VERSION_MINOR}")
 set (CPACK_PACKAGE_VERSION_PATCH "${GAMMU_VERSION_PATCH}")
-set (CPACK_INSTALLER_PROGRAM_DISK_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/installer/addpostflight")
 
 if (WIN32 AND NOT CYGWIN)
     set (CPACK_SYSTEM_NAME "Windows" CACHE STRING "Windows package name")

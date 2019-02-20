@@ -1,5 +1,5 @@
 /* (c) 2002-2004 by Joergen Thomsen */
-/* Copyright (c) 2009 - 2017 Michal Cihar <michal@cihar.com> */
+/* Copyright (c) 2009 - 2018 Michal Cihar <michal@cihar.com> */
 
 #include <gammu.h>
 
@@ -39,6 +39,31 @@
 #define chk_fwrite(data, size, count, file) \
 	if (fwrite(data, size, count, file) != count) goto fail;
 
+
+static void SMSDFiles_EscapeNumber(char *string)
+{
+	char *pos = string;
+	while (*pos) {
+		if (*pos == '*') {
+			*pos = 'X';
+
+		}
+		pos++;
+	}
+}
+
+static void SMSDFiles_DecodeNumber(char *string)
+{
+	char *pos = string;
+	while (*pos) {
+		if (*pos == 'X') {
+			*pos = '*';
+
+		}
+		pos++;
+	}
+}
+
 /* Save SMS from phone (called Inbox sms - it's in phone Inbox) somewhere */
 static GSM_Error SMSDFiles_SaveInboxSMS(GSM_MultiSMSMessage * sms, GSM_SMSDConfig * Config, char **Locations)
 {
@@ -60,6 +85,7 @@ static GSM_Error SMSDFiles_SaveInboxSMS(GSM_MultiSMSMessage * sms, GSM_SMSDConfi
 		if (sms->SMS[i].Coding == SMS_Coding_8bit)
 			strcpy(ext, "bin");
 		DecodeUnicode(sms->SMS[i].Number, buffer2);
+		SMSDFiles_EscapeNumber(buffer2);
 		/* we loop on yy for the first SMS assuming that if xxxx_yy_00.ext is absent,
 		   any xxxx_yy_01,02, must be garbage, that can be overwritten */
 		file = NULL;
@@ -429,6 +455,7 @@ static GSM_Error SMSDFiles_FindOutboxSMS(GSM_MultiSMSMessage * sms, GSM_SMSDConf
 			return ERR_UNKNOWN;
 		}
 
+		SMSDFiles_DecodeNumber(pos1);
 		for (i = 0; i < sms->Number; i++) {
 			EncodeUnicode(sms->SMS[i].Number, pos1, phlen);
 		}
@@ -563,6 +590,7 @@ static GSM_Error SMSDFiles_CreateOutboxSMS(GSM_MultiSMSMessage * sms, GSM_SMSDCo
 			strcpy(ext, "txt");
 		}
 		DecodeUnicode(sms->SMS[i].Number, buffer2);
+		SMSDFiles_EscapeNumber(buffer2);
 
 		for (j = 0; j < 100; j++) {
 			sprintf(FileName,

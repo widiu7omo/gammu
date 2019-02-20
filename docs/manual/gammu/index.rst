@@ -353,6 +353,7 @@ ____________
 
         Send USSD query instead of SMS.
 
+        .. versionaddded:: 1.38.5
 
     .. option:: EMS [-unicode] [-16bit] [-format lcrasbiut] [-text text] [-unicodefiletext file] [-defsound ID] [-defanimation ID] [-tone10 file] [-tone10long file] [-tone12 file] [-tone12long file] [-toneSE file] [-toneSElong file] [-fixedbitmap file] [-variablebitmap file] [-variablebitmaplong file] [-animation frames file1 ...] [-protected number]
 
@@ -1735,7 +1736,7 @@ values increased by 100:
 121
     Function not supported by phone.
 122
-    Entry is empty.
+    Empty entry.
 123
     Security error. Maybe no PIN?
 124
