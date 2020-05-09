@@ -26,6 +26,16 @@ script:
 after_success:
   - make gcov
   - bash <(curl -s https://codecov.io/bash) -X gcov -F $TRAVIS_OS_NAME
+before_deploy:
+  - cd ~/
+  - tar -zcf ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz ${REPO}
+deploy:
+  provider: releases
+  api_key: "${GITHUB_OAUTH_TOKEN}"
+  file: "${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz"
+  skip_cleanup: true
+  on:
+    tags: true
 # install build dependencies and enable Coverity scan
 addons:
   apt:
