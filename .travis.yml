@@ -22,10 +22,7 @@ before_script:
 script:
   - cmake .. -DCMAKE_C_COMPILER=$CC -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Continuous -DONLINE_TESTING=ON $TESTARGS $ARGS
   - make || travis_terminate 1
-  - make test
 after_success:
-  - make gcov
-  - bash <(curl -s https://codecov.io/bash) -X gcov -F $TRAVIS_OS_NAME
   - cd ~/build/widiu7omo/gammu/
   - zip -9 -r ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.zip ./*
 before_deploy:
