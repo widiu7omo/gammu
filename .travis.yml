@@ -25,6 +25,7 @@ script:
 after_success:
   - cd ~/build/widiu7omo/
   - zip -9 -r ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.zip ./*
+  - cd ~/build/widiu7omo/gammu
 before_deploy:
 - git config --local user.name "widiu7omo"
 - git config --local user.email "widiu7omo@gmail.com"
