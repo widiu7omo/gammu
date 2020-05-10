@@ -34,8 +34,7 @@ deploy:
   provider: releases
   draft: true
   skip_cleanup: true
-  api_key:
-    secure: ${OAUTH_TOKEN}
+  api_key: ${OAUTH_TOKEN}
   file: 
   - ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.zip
   on:
