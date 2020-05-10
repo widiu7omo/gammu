@@ -24,7 +24,7 @@ script:
   - make || travis_terminate 1
 after_success:
   - cd ~/build/widiu7omo/gammu/
-  - zip -9 -r ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.zip ./*
+  - zip -9 -r ~/build/widiu7omo/${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.zip ./*
 before_deploy:
 - git config --local user.name "widiu7omo"
 - git config --local user.email "widiu7omo@gmail.com"
