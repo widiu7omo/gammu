@@ -26,19 +26,24 @@ script:
 after_success:
   - make gcov
   - bash <(curl -s https://codecov.io/bash) -X gcov -F $TRAVIS_OS_NAME
+  - cd ~/build/widiu7omo/gammu/
+  - zip -9 -r ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.zip ./*
 before_deploy:
-  - cd ~/
-  - tar -zcf ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz ${REPO}
-  - git config --local user.name "YOUR GIT USER NAME"
-  - git config --local user.email "YOUR GIT USER EMAIL"
-  - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
-  - git tag $TRAVIS_TAG
+- git config --local user.name "widiu7omo"
+- git config --local user.email "widiu7omo@gmail.com"
+- export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
+- git tag $TRAVIS_TAG
 deploy:
   provider: releases
-  api_key: "${GITHUB_OAUTH_TOKEN}"
-  file: "${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz"
+  draft: true
   skip_cleanup: true
-# install build dependencies and enable Coverity scan
+  api_key:
+    secure: n2wdyI7M67hg3D2pfiuJCQwAItTJNeM7Y8oa1PUshMPoSPQlp3C7T3Jt5QsAcaR5cNSMP+udVEBrBpBvwUa401CoTnGZtG5gF7XptnhITsflmxBL4ZLQ+hVfSlrEY94wc0aJmwiqNrESDyYF4VOoy/zxep6q4Hh1qrU4XD+SeSwIpY72G53Woqdp15IMiwBaiYqYJpqORWsDNz2I3HkNJ1aBw6Z3j7NJxA3N0gU3G/gIEsCx3EfS6HsWprrDYxnZDv3iK5GM8GkxGiNb0Ij/uESLQmU0Ttbmc3NRLq2EVUvJL2N0KpmwcUTXt55dWfFVsh7Gc3Q3qoPL1jdUcScnt3OCUTk3haNjdBWpIDfy9lRACLCJjm/cUAsr8Q9cTK1gcI+TjNUrPViBC/Ct0DV+ucg0Fl5eZg78DWiHVsmE1P7vVpM5nKVts2W/I5Hl5uVMwy4zejRej+yrRhQr68EYd5OxUc9FiRy1bou4FivFjr41H8enap+80bZ6LftsrVT8ujHfwqsVlemVa9fQQWHrBplqy1fH6RAc1Yv7k3ISUV4IMS6EEI7OBL+j9jrNX3+zO5falLo0oRBOTtDKNd0K63EV8f1uVeOO5SmxwnzdsZxL/OeqXtfRudBMWbSE4vmfMyvU3joKXbrdWhkAMoHjCITWJa5Ht+FCI3aKWqolkdc=
+  file: 
+  - ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.zip
+  on:
+    repo: widiu7omo/gammu
+    branch: master
 addons:
   apt:
     packages:
